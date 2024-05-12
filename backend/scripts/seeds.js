@@ -8,48 +8,40 @@ const Item = mongoose.model("Item");
 const Comment = mongoose.model("Comment");
 const User = mongoose.model("User");
 
-const users = []
-
-for(let i = 0; i<100; i++){
-    let newUser = {
-        username : `user${i}`,
-        email: `user${i}@gmail.com`,
-        bio: "Hi! I'm new user.",
-    }
-    users.push(newUser);
-}
-
-const seedDB = async () => {
-    await User.insertMany(users);
-
-    for (let user of users) {
-    let newItem = new Item({
-      slug: `slug${user._id}`,
+async function seedDatabase() {
+  for (let i = 0; i < 100; i++) {
+    // add user
+    const user = { username: `user${i}`, email: `user${i}@gmail.com` };
+    const options = { upsert: true, new: true };
+    const createdUser = await User.findOneAndUpdate(user, {}, options);
+    
+    // add item to user
+    const item = {
+      slug: `slug${i}`,
       title: `title ${i}`,
       description: `description ${i}`,
-      seller: user._id,
-    });
-    await newItem.save();
-
-    // Add item to user's items array
-    user.items.push(newItem._id);
-    await user.save();
-
-    // Create comments for each item
-    for (let i = 0; i < 10; i++) {
-      let newComment = new Comment({
-        body: `This is comment`,
-        seller: user._id,
-        item: newItem._id,
-      });
-      await newComment.save();
-
-      // Add comment to item's comments array
-      newItem.comments.push(newComment._id);
-      await newItem.save();
+      seller: createdUser,
+    };
+    const createdItem = await Item.findOneAndUpdate(item, {}, options);
+    
+    // add comments to item
+    if (!createdItem?.comments?.length) {
+      let commentIds = [];
+      for (let j = 0; j < 100; j++) {
+        const comment = new Comment({
+          body: `body ${j}`,
+          seller: createdUser,
+          item: createdItem,
+        });
+        await comment.save();
+        commentIds.push(comment._id);
+      }
+      createdItem.comments = commentIds;
+      await createdItem.save();
     }
   }
-};
+}
+
 
 seedDB()
   .then(() => {
