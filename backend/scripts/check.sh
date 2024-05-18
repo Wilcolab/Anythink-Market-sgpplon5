@@ -10,7 +10,7 @@ echo "bd530b55-1d2e-480b-b924-fd91c358b0d3,MacDowall,Arnie,amacdowall83@Amazon.c
 echo "Example input:"
 cat input.txt
 
-bash ./scripts/extract_names.sh input.txt output_names.txt
+bash ./extract_names.sh input.txt output_names.txt
 
 echo "Output:"
 cat output_names.txt
